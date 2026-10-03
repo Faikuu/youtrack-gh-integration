@@ -20,8 +20,17 @@ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;
 .gh .res a:hover{background:var(--hover)}
 .gh .res .title{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gh .muted{color:var(--muted)}
+.gh .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.gh .topbar h4{margin:0;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.gh .x{border:none;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;border-radius:4px;padding:0 4px}
+.gh .x:hover{color:var(--fg)}
+@keyframes gh-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+.gh .skel{pointer-events:none}
+.gh .skel .badge{min-width:52px;color:transparent;animation:gh-pulse 1.2s ease-in-out infinite}
+.gh .skel-line{display:block;height:12px;border-radius:6px;background:var(--hover);border:1px solid var(--border);margin:4px 0;animation:gh-pulse 1.2s ease-in-out infinite}
 </style></head>
 <body><div class="gh">
+<div class="topbar"><h4>Search GitHub</h4><button id="close" class="x" title="Close">×</button></div>
 <div class="tabs" id="tabs">
 <button data-t="issue" class="on"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none"/></svg>Issues</button><button data-t="pr"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="4.5" cy="4.5" r="2.2"/><circle cx="4.5" cy="11.5" r="2.2"/><circle cx="11.5" cy="7" r="2.2"/><path d="M4.5 6.7v2.6M11.5 7H7.4c-1.6 0-2.9-.9-2.9-2.3"/></svg>Pull requests</button><button data-t="commit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.4"/><path d="M1.5 8h4.1M10.4 8h4.1"/></svg>Commits</button>
 </div>
@@ -39,7 +48,13 @@ function searchError(e){
   if (/\b40[01]\b/.test(m)) return 'Search not allowed (token missing or no permission). Check the app settings.';
   return m;
 }
-let type = 'issue', timer = null, items = [];
+let type = 'issue', timer = null, items = [], seq = 0;
+document.getElementById('close').onclick = () => { try { if (host.exitModalMode) host.exitModalMode(); } catch (e) {} };
+function skeleton(n, kind){
+  let rows = '';
+  for (let i = 0; i < n; i++) rows += `<div class="row skel" style="display:flex;gap:8px;align-items:baseline;padding:7px 6px"><span class="badge ${esc(kind)}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="flex:1;min-width:0"><span class="skel-line" style="width:45%"></span><span class="skel-line" style="width:85%"></span></span></div>`;
+  return rows;
+}
 document.querySelectorAll('#tabs button').forEach(b => { b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); type = b.dataset.t; doSearch();
@@ -49,11 +64,14 @@ async function doSearch(){
   const repo = document.getElementById('r').value.trim();
   const box = document.getElementById('res');
   if (q.length < 2) { box.textContent = 'Type to search GitHub.'; items = []; return; }
-  box.textContent = 'Searching…';
+  const my = ++seq;
+  box.innerHTML = skeleton(4, type);
   try {
     const data = await host.fetchApp('backend-global/search', {query:{q, type, repo}});
+    if (my !== seq) return;
     items = data.items || [];
   } catch (e) {
+    if (my !== seq) return;
     box.textContent = 'Search failed: ' + searchError(e); items = []; return;
   }
   if (!items.length) { box.textContent = 'No results.'; return; }
@@ -72,6 +90,6 @@ async function doSearch(){
     }
   }; });
 }
-document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
-document.getElementById('r').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
+document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 500); });
+document.getElementById('r').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 500); });
 </script></div></body></html>

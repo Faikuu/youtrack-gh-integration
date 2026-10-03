@@ -9,6 +9,13 @@ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;
 }
 .gh h4{margin:2px 0 8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px}
 .gh h4 svg{flex:none}
+.gh .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.gh .topbar h4{margin:0}
+.gh #close{font-size:18px;line-height:1}
+@keyframes gh-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+.gh .skel{pointer-events:none}
+.gh .skel .badge{min-width:52px;color:transparent;animation:gh-pulse 1.2s ease-in-out infinite}
+.gh .skel-line{display:block;height:12px;border-radius:6px;background:var(--hover);border:1px solid var(--border);margin:4px 0;animation:gh-pulse 1.2s ease-in-out infinite}
 .gh .tabs{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 8px}
 .gh .tabs button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--hover);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;color:var(--muted);max-width:100%}
 .gh .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
@@ -34,6 +41,7 @@ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;
 .gh .res a:hover{background:var(--hover)}
 </style></head>
 <body><div class="gh">
+<div class="topbar"><h4>GitHub links</h4><button id="close" class="x" title="Close" hidden>×</button></div>
 <div id="list"><div class="muted">Loading…</div></div>
 <div id="err" class="err"></div>
 <h4><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 9.5l3-3M7.8 5.2l.7-.7a3 3 0 014.2 4.2l-.7.7M8.2 10.8l-.7.7a3 3 0 01-4.2-4.2l.7-.7"/></svg>Link new</h4>
@@ -84,22 +92,36 @@ function render(links){
     }
   }; });
 }
-document.getElementById('link').onclick = () => host.enterModalMode();
+document.getElementById('link').onclick = () => { host.enterModalMode(); inModal = true; syncMode(); };
+document.getElementById('close').onclick = () => { try { if (host.exitModalMode) host.exitModalMode(); } finally { inModal = false; syncMode(); } };
+let inModal = false;
+function syncMode(){
+  document.getElementById('link').hidden = inModal;
+  document.getElementById('close').hidden = !inModal;
+}
+syncMode();
+function skeleton(n, kind){
+  let rows = '';
+  for (let i = 0; i < n; i++) rows += `<div class="row skel"><span class="badge ${esc(kind)}">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="meta"><span class="skel-line" style="width:45%"></span><span class="skel-line" style="width:85%"></span></span></div>`;
+  return rows;
+}
 document.querySelectorAll('#tabs button').forEach(b => { b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); type = b.dataset.t; doSuggest();
 }; });
-let t = null;
-document.getElementById('q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(doSuggest, 300); });
+let t = null, seq = 0;
+document.getElementById('q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(doSuggest, 500); });
 async function doSuggest(){
   const raw = document.getElementById('q').value.trim();
   const q = raw.replace(/^(gh|fix)\s+/i, '');
   const box = document.getElementById('suggest');
   const sErr = document.getElementById('suggest-err');
   if (q.length < 2) { box.innerHTML = ''; sErr.textContent = ''; return; }
-  box.innerHTML = '<div class="muted">Searching…</div>';
+  const my = ++seq;
+  box.innerHTML = skeleton(3, type);
   try {
     const data = await host.fetchApp('backend-global/search', {query:{q, type}});
+    if (my !== seq) return;
     sErr.textContent = '';
     const items = (data.items || []).slice(0, 5);
     if (!items.length) { box.innerHTML = '<div class="muted">No results.</div>'; return; }
@@ -118,6 +140,7 @@ async function doSuggest(){
       }
     }; });
   } catch (e) {
+    if (my !== seq) return;
     box.innerHTML = '';
     sErr.textContent = 'Error: ' + searchError(e);
   }

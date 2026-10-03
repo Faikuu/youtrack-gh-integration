@@ -62,10 +62,24 @@ test('global endpoints are called WITHOUT scope:true (flag is only for entity-sc
   }
 });
 
+test('panel is modal-aware (hides open button, offers close in modal)', () => {
+  const html = fs.readFileSync('gh-links-app/widgets/linked-panel/index.html', 'utf8');
+  assert.ok(html.includes('exitModalMode'), 'panel cannot close the modal');
+  assert.ok(html.includes('id="close"'), 'panel has no close button');
+});
 test('widgets paint an explicit themed background (no transparent surfaces)', () => {
   for (const w of widgets) {
     const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
     assert.ok(/background:\s*var\(--bg\)/.test(html), w + ' has no themed background');
+  }
+});
+
+test('search debounces per keystroke, guards stale responses, shows skeletons', () => {
+  for (const w of ['linked-panel', 'picker']) {
+    const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
+    assert.ok(/setTimeout\([^,]+,\s*500\)/.test(html), w + ' search is not debounced at 500ms');
+    assert.ok(/\+\+seq/.test(html), w + ' has no stale-response guard');
+    assert.ok(html.includes('skeleton') && /@keyframes/.test(html), w + ' has no loading skeleton');
   }
 });
 
