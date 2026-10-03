@@ -42,4 +42,14 @@ function buildIssuesQuery(text, repo, kind) {
   if (repo) q += ' repo:' + repo;
   return q;
 }
-module.exports = { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds, buildSearchQuery, buildIssuesQuery };
+// allowedRepos setting: comma-separated list. Entries with a slash are repos
+// (`acme/web` → `repo:acme/web`); bare names or `org:`-prefixed entries are
+// orgs (`acme` or `org:acme` → `org:acme`). Blank = unscoped (all of GitHub).
+function parseAllowlist(raw) {
+  return String(raw || '').split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(e => e.toLowerCase().startsWith('org:') ? 'org:' + e.slice(4).trim() : (e.includes('/') ? 'repo:' + e : 'org:' + e))
+    .filter(q => q !== 'org:' && q !== 'repo:');
+}
+module.exports = { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds, buildSearchQuery, buildIssuesQuery, parseAllowlist };

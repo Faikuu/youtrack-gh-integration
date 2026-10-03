@@ -27,8 +27,10 @@ In **Administration → Apps → GitHub Links → Settings** set:
 - **`webhookToken`** (required for the GitHub→YouTrack webhook): any shared
   secret string. It is appended to the webhook URL as `?token=…` (GitHub's
   "Secret" HMAC field is *not* checked by the handler — put the token in the URL).
-- **`allowedRepos`**: comma-separated `owner/repo` list. Blank = all repos.
-  (Declared setting; v1 does not yet filter search results by it.)
+- **`allowedRepos`**: comma-separated scope list. Entries with a slash are repos
+  (`acme/web`); bare names or `org:`-prefixed entries are orgs (`acme` → whole
+  org). Blank = search all of GitHub. Applied to every search unless the
+  picker's repo field narrows it further.
 - **`allowCommands`**: reserved for future state commands (see Limitations).
 
 ## 3. Attach the app to a project
@@ -109,7 +111,8 @@ Leave blank to allow all repositories.
 ### Known v1 limitations
 
 - No pagination on GitHub search results (first page only).
-- `allowedRepos` allowlist is declared but not yet enforced in search.
+- `allowedRepos` scopes searches (link creation itself is not restricted —
+  results outside the scope simply never appear).
 - `allowCommands` / `fix <text>` state commands are reserved; selecting from the
   suggestion box links only.
 - Webhook auth is a shared-secret query param, not HMAC signature verification.

@@ -1,6 +1,6 @@
 const http = require('@jetbrains/youtrack-scripting-api/http');
 const { mapIssueItem, mapCommitItem } = require('./gh-format.js');
-const { buildSearchQuery, buildIssuesQuery } = require('./gh-links.js');
+const { buildSearchQuery, buildIssuesQuery, parseAllowlist } = require('./gh-links.js');
 
 function repoFor(item, repoParam) {
   if (repoParam) return repoParam;
@@ -20,7 +20,9 @@ exports.httpHandler = {
       conn.bearerAuth(ctx.settings.githubToken);
       conn.addHeader('Accept', 'application/vnd.github+json');
       conn.addHeader('X-GitHub-Api-Version', '2022-11-28');
-      const query = type === 'commit' ? buildSearchQuery(q, repo) : buildIssuesQuery(q, repo, type);
+      let query = type === 'commit' ? buildSearchQuery(q, '') : buildIssuesQuery(q, '', type);
+      const scopeQuals = repo ? ['repo:' + repo] : parseAllowlist(ctx.settings.allowedRepos || '');
+      if (scopeQuals.length) query += ' ' + scopeQuals.join(' ');
       let path = '/search/issues?q=' + encodeURIComponent(query);
       if (type === 'commit') path = '/search/commits?q=' + encodeURIComponent(query);
       const res = conn.getSync(path, {});

@@ -36,3 +36,12 @@ test('buildIssuesQuery preserves a user-supplied qualifier and appends repo', ()
   assert.equal(buildIssuesQuery('is:pr fix crash', '', 'issue'), 'is:pr fix crash');
   assert.equal(buildIssuesQuery('crash', 'o/r', 'issue'), 'crash is:issue repo:o/r');
 });
+
+test('parseAllowlist maps entries to repo:/org: qualifiers', () => {
+  const { parseAllowlist } = require('../gh-links-app/gh-links.js');
+  assert.deepEqual(parseAllowlist('acme/web, acme/api'), ['repo:acme/web', 'repo:acme/api']);
+  assert.deepEqual(parseAllowlist('org:acme'), ['org:acme']);
+  assert.deepEqual(parseAllowlist('acme'), ['org:acme']);
+  assert.deepEqual(parseAllowlist(''), []);
+  assert.deepEqual(parseAllowlist(' , acme/web ,, '), ['repo:acme/web']);
+});
