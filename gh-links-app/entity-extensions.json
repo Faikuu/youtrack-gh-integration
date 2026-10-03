@@ -1,0 +1,6 @@
+{
+  "entityTypeExtensions": [
+    { "entityType": "Issue", "properties": { "ghLinks": { "type": "string" } } },
+    { "entityType": "AppGlobalStorage", "properties": { "ghRepoMap": { "type": "string" } } }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "GitHub Links Settings",
+  "properties": {
+    "githubToken": { "title": "GitHub token", "type": "string", "format": "secret", "description": "Fine-grained PAT with contents:read, pull_requests:read, metadata:read" },
+    "allowedRepos": { "title": "Allowed repos", "type": "string", "description": "Comma-separated owner/repo list scoped per project. Empty = all." },
+    "webhookToken": { "title": "Webhook shared secret", "type": "string", "format": "secret", "description": "Passed as ?token= to the webhook endpoint" },
+    "allowCommands": { "title": "Allow state commands from picker", "type": "boolean" }
+  },
+  "required": ["githubToken"]
+}
