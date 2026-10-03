@@ -3,7 +3,7 @@
   "name": "gh-links-app",
   "title": "GitHub Links",
   "description": "Link GitHub issues, PRs and commits to YouTrack issues via visual picker.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minYouTrackVersion": "2024.1.0",
   "vendor": { "name": "homebrew" },
   "icon": "icon.svg",
