@@ -1,11 +1,33 @@
-<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css"></head>
-<body style="padding:12px;font-family:system-ui">
-<div id="tabs" style="display:flex;gap:4px;margin-bottom:8px">
-<button data-t="issue" class="on">Issues</button><button data-t="pr">PRs</button><button data-t="commit">Commits</button>
+<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css">
+<style>
+:root{color-scheme:light dark}
+body{margin:0}
+.gh{--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--input:#ffffff;--hover:#f6f8fa;--accent:#0969da;
+font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;color:var(--fg);padding:12px;max-width:100%;overflow-x:hidden;box-sizing:border-box}
+@media (prefers-color-scheme:dark){
+.gh{--fg:#e6edf3;--muted:#8b949e;--border:#30363d;--input:#0d1117;--hover:#161b22;--accent:#4493f8}
+}
+.gh .tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.gh .tabs button{border:1px solid var(--border);background:var(--hover);border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.gh .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.gh input[type=text]{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-size:13px;background:var(--input);color:var(--fg);margin-top:8px}
+.gh input[type=text]:first-of-type{margin-top:0}
+.gh input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.15)}
+.gh .badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border-radius:10px;padding:2px 8px;color:#fff;margin-right:8px}
+.gh .badge.issue{background:#1a7f37}.gh .badge.pr{background:#8250df}.gh .badge.commit{background:#57606a}
+.gh .res{margin-top:8px}
+.gh .res a{color:var(--fg);text-decoration:none;display:block;padding:7px 6px;border-radius:6px}
+.gh .res a:hover{background:var(--hover)}
+.gh .res .title{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh .muted{color:var(--muted)}
+</style></head>
+<body><div class="gh">
+<div class="tabs" id="tabs">
+<button data-t="issue" class="on">Issues</button><button data-t="pr">Pull requests</button><button data-t="commit">Commits</button>
 </div>
-<input id="q" placeholder="Type at least 2 characters…" style="width:100%">
-<div id="repo"><input id="r" placeholder="owner/repo (optional)" style="width:100%;margin-top:8px"></div>
-<div id="res" style="margin-top:8px">Type to search GitHub.</div>
+<input id="q" type="text" placeholder="Type at least 2 characters…" autocomplete="off">
+<input id="r" type="text" placeholder="owner/repo filter (optional)" autocomplete="off">
+<div id="res" class="res muted">Type to search GitHub.</div>
 <script type="module">
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -28,7 +50,10 @@ async function doSearch(){
     box.textContent = 'Search failed: ' + errText(e); items = []; return;
   }
   if (!items.length) { box.textContent = 'No results.'; return; }
-  box.innerHTML = items.map((it, i)=>`<div style="padding:4px 0"><a href="#" data-i="${i}">${esc(it.kind)} ${esc(it.repo)}${it.number?'#'+esc(String(it.number)):''} — ${esc(it.title||it.url)}</a></div>`).join('');
+  box.innerHTML = items.map((it, i)=>{
+    const ref = it.kind === 'commit' && it.sha ? esc(it.repo) + '@' + esc(String(it.sha).slice(0,7)) : esc(it.repo) + (it.number ? '#' + esc(String(it.number)) : '');
+    return `<a href="#" data-i="${i}"><span class="badge ${esc(it.kind)}">${esc(it.kind)}</span><b>${ref}</b><span class="title">${esc(it.title||it.url)}</span></a>`;
+  }).join('');
   box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async e => {
     e.preventDefault();
     try {
@@ -42,4 +67,4 @@ async function doSearch(){
 }
 document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
 document.getElementById('r').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
-</script></body></html>
+</script></div></body></html>

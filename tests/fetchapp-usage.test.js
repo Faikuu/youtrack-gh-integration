@@ -62,6 +62,13 @@ test('global endpoints are called WITHOUT scope:true (flag is only for entity-sc
   }
 });
 
+test('widgets respect OS theme (no hardcoded light surfaces)', () => {
+  for (const w of widgets) {
+    const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
+    assert.ok(html.includes('prefers-color-scheme'), w + ' has no dark-mode rules');
+    assert.ok(!/background:\s*#fff/i.test(html), w + ' hardcodes a white background');
+  }
+});
 test('panel offers per-type search tabs (issues, prs, commits) and sends the type', () => {
   const html = fs.readFileSync('gh-links-app/widgets/linked-panel/index.html', 'utf8');
   for (const t of ['data-t="issue"', 'data-t="pr"', 'data-t="commit"']) {

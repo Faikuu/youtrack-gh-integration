@@ -1,7 +1,19 @@
-<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css"></head>
-<body style="padding:12px;font-family:system-ui;max-width:640px">
-<h3 style="margin-top:0">GitHub Settings</h3>
-<p><b>allowedRepos</b> (app settings): comma-separated <code>owner/repo</code> entries, e.g. <code>acme/web, acme/api</code>. Blank = all repos allowed. Tokens stay server-side; widgets never handle secrets.</p>
+<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css">
+<style>
+:root{color-scheme:light dark}
+body{margin:0}
+.gh{--fg:#1f2328;--muted:#57606a;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;color:var(--fg);padding:12px;max-width:640px;overflow-x:hidden;box-sizing:border-box}
+@media (prefers-color-scheme:dark){
+.gh{--fg:#e6edf3;--muted:#8b949e}
+}
+.gh h3{margin-top:0;color:var(--fg)}
+.gh p{color:var(--fg)}
+.gh code{word-break:break-all}
+.gh .muted{color:var(--muted)}
+</style></head>
+<body><div class="gh">
+<h3>GitHub Settings</h3>
+<p><b>allowedRepos</b> (app settings): comma-separated scope entries — <code>owner/repo</code> for repos, a bare name for a whole org. Blank = all of GitHub. Tokens stay server-side; widgets never handle secrets.</p>
 <p>Webhook URL (configure in the GitHub repo settings):</p>
 <code id="hook" style="word-break:break-all"></code>
 <p id="status">Loading status…</p>
@@ -32,4 +44,4 @@ try {
 } catch (e) {
   document.getElementById('status').textContent = 'Status unavailable: ' + (e && e.message ? e.message : e);
 }
-</script></body></html>
+</script></div></body></html>
