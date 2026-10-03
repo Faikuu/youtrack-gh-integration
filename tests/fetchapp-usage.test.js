@@ -62,6 +62,13 @@ test('global endpoints are called WITHOUT scope:true (flag is only for entity-sc
   }
 });
 
+test('panel input needs no command prefix (gh/fix prefixes are stripped)', () => {
+  const html = fs.readFileSync('gh-links-app/widgets/linked-panel/index.html', 'utf8');
+  assert.ok(/gh\|fix/i.test(html) || /gh.*fix.*replace|replace.*gh/i.test(html),
+    'panel must strip optional gh/fix prefix before searching');
+  assert.ok(!html.includes('placeholder="gh <search>'), 'panel placeholder must not require a gh prefix');
+});
+
 test('issue-scope backend/links keeps scope:true from issue widgets', () => {
   for (const w of ['linked-panel', 'picker']) {
     const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');

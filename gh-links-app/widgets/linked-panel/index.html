@@ -3,7 +3,7 @@
 <div id="list">Loading…</div>
 <div id="err" style="color:red"></div>
 <div style="display:flex;gap:8px;margin-top:8px">
-<input id="q" placeholder="gh <search> or fix <search>" style="flex:1">
+<input id="q" placeholder="Search GitHub to link…" style="flex:1">
 <button id="link">Link GitHub…</button>
 </div><div id="suggest"></div>
 <div id="suggest-err" style="color:red"></div>
@@ -41,7 +41,8 @@ let t = null;
 document.getElementById('q').addEventListener('input', e => {
   clearTimeout(t);
   t = setTimeout(async () => {
-    const q = e.target.value.trim();
+    const raw = e.target.value.trim();
+    const q = raw.replace(/^(gh|fix)\s+/i, '');
     const box = document.getElementById('suggest');
     const sErr = document.getElementById('suggest-err');
     if (q.length < 2) { box.innerHTML = ''; sErr.textContent = ''; return; }
