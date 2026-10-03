@@ -25,11 +25,39 @@ exports.httpHandler = {
       if (type === 'commit') path = '/search/commits?q=' + encodeURIComponent(query);
       const res = conn.getSync(path, {});
       if (!res || !res.isSuccess) { ctx.response.code = 502; ctx.response.json({ error: 'github search failed' }); return; }
-      const rawItems = (res.json() && res.json().items) || [];
+      const body = res.json() || {};
+      const rawItems = body.items || [];
       const items = type === 'commit'
         ? rawItems.map(it => mapCommitItem(it, repoFor(it, repo)))
         : rawItems.map(it => mapIssueItem(it, repoFor(it, repo)));
       ctx.response.json({ items });
+    } },
+    { scope: 'issue', method: 'GET', path: 'links', permissions: ['READ_ISSUE'], handle: function (ctx) {
+      const raw = ctx.issue.extensionProperties.ghLinks || '';
+      let links = [];
+      try { links = raw ? JSON.parse(raw) : []; if (!Array.isArray(links)) links = []; } catch (e) { links = []; }
+      ctx.response.json({ links: links });
+    } },
+    { scope: 'issue', method: 'POST', path: 'links', permissions: ['UPDATE_ISSUE'], handle: function (ctx) {
+      const entry = ctx.request.json();
+      if (!entry || !entry.url) { ctx.response.code = 400; ctx.response.json({ error: 'entry.url required' }); return; }
+      let links = [];
+      try { links = ctx.issue.extensionProperties.ghLinks ? JSON.parse(ctx.issue.extensionProperties.ghLinks) : []; } catch (e) { links = []; }
+      if (!links.some(function (x) { return x.url === entry.url; })) {
+        links.push(entry);
+        ctx.issue.extensionProperties.ghLinks = JSON.stringify(links);
+        ctx.issue.addComment('Linked GitHub ' + entry.kind + ' ' + entry.url + (entry.title ? ' — ' + entry.title : ''));
+      }
+      ctx.response.json({ links: links });
+    } },
+    { scope: 'issue', method: 'DELETE', path: 'links', permissions: ['UPDATE_ISSUE'], handle: function (ctx) {
+      const url = ctx.request.getParameter('url') || '';
+      let links = [];
+      try { links = ctx.issue.extensionProperties.ghLinks ? JSON.parse(ctx.issue.extensionProperties.ghLinks) : []; } catch (e) { links = []; }
+      links = links.filter(function (x) { return x.url !== url; });
+      ctx.issue.extensionProperties.ghLinks = JSON.stringify(links);
+      ctx.issue.addComment('Unlinked GitHub ' + url);
+      ctx.response.json({ links: links });
     } }
   ]
 };
