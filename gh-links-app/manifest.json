@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/youtrack-app.json",
+  "name": "gh-links-app",
+  "title": "GitHub Links",
+  "description": "Link GitHub issues, PRs and commits to YouTrack issues via visual picker.",
+  "version": "0.1.0",
+  "minYouTrackVersion": "2024.1.0",
+  "vendor": { "name": "homebrew" },
+  "widgets": [
+    { "key": "linked-panel", "name": "Linked GitHub", "extensionPoint": "ISSUE_FIELD_PANEL_LAST", "indexPath": "linked-panel/index.html", "permissions": ["READ_ISSUE"] },
+    { "key": "link-picker", "name": "Link GitHub...", "extensionPoint": "ISSUE_OPTIONS_MENU_ITEM", "indexPath": "picker/index.html", "permissions": ["READ_ISSUE"] },
+    { "key": "project-settings", "name": "GitHub Settings", "extensionPoint": "PROJECT_SETTINGS", "indexPath": "project-settings/index.html", "permissions": ["READ_PROJECT"] }
+  ]
+}
