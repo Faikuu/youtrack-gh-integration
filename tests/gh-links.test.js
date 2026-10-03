@@ -45,3 +45,17 @@ test('parseAllowlist maps entries to repo:/org: qualifiers', () => {
   assert.deepEqual(parseAllowlist(''), []);
   assert.deepEqual(parseAllowlist(' , acme/web ,, '), ['repo:acme/web']);
 });
+
+test('parseDirectRef recognizes numbers, hashes, repo-qualified refs and URLs', () => {
+  const { parseDirectRef } = require('../gh-links-app/gh-links.js');
+  assert.deepEqual(parseDirectRef('#123'), { kind: 'number', owner: null, repo: null, number: 123 });
+  assert.deepEqual(parseDirectRef('123'), { kind: 'number', owner: null, repo: null, number: 123 });
+  assert.deepEqual(parseDirectRef('o/r#12'), { kind: 'number', owner: 'o', repo: 'r', number: 12 });
+  assert.deepEqual(parseDirectRef('r#12'), { kind: 'number', owner: null, repo: 'r', number: 12 });
+  assert.deepEqual(parseDirectRef('abc1234'), { kind: 'commit', owner: null, repo: null, sha: 'abc1234' });
+  assert.deepEqual(parseDirectRef('https://github.com/o/r/pull/5'), { kind: 'number', owner: 'o', repo: 'r', number: 5 });
+  assert.deepEqual(parseDirectRef('https://github.com/o/r/issues/6'), { kind: 'number', owner: 'o', repo: 'r', number: 6 });
+  assert.deepEqual(parseDirectRef('https://github.com/o/r/commit/abc1234def'), { kind: 'commit', owner: 'o', repo: 'r', sha: 'abc1234def' });
+  assert.equal(parseDirectRef('feat'), null);
+  assert.equal(parseDirectRef(''), null);
+});

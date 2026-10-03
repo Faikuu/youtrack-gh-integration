@@ -31,6 +31,25 @@ function buildSearchQuery(text, repo) {
   const q = String(text || '').trim();
   return repo ? `${q} repo:${repo}` : q;
 }
+// Direct references bypass text search: '#123' / '123' (issue or PR number),
+// 'o/r#123' / 'r#123', full GitHub URLs, or a 7–40 char commit hash.
+// Returns {kind:'number'|'commit', owner, repo, number?, sha?} or null.
+// All-digit strings prefer number (7-digit all-numeric SHAs are vanishingly rare).
+function parseDirectRef(text) {
+  const t = String(text || '').trim();
+  if (!t) return null;
+  let m = t.match(/^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/(pull|issues)\/(\d+)(?:\/|\?.*)?$/i);
+  if (m) return { kind: 'number', owner: m[1], repo: m[2], number: Number(m[4]) };
+  m = t.match(/^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/commit\/([0-9a-f]{7,40})(?:\/|\?.*)?$/i);
+  if (m) return { kind: 'commit', owner: m[1], repo: m[2], sha: m[3] };
+  m = t.match(/^(?:([\w.-]+)\/)?([\w.-]+)#(\d+)$/);
+  if (m) return { kind: 'number', owner: m[1] || null, repo: m[2], number: Number(m[3]) };
+  m = t.match(/^#?(\d+)$/);
+  if (m) return { kind: 'number', owner: null, repo: null, number: Number(m[1]) };
+  m = t.match(/^[0-9a-f]{7,40}$/i);
+  if (m && !/^\d+$/.test(t)) return { kind: 'commit', owner: null, repo: null, sha: t.toLowerCase() };
+  return null;
+}
 // GitHub's /search/issues endpoint rejects queries without a type qualifier
 // (422 "Query must include 'is:issue' or 'is:pull-request'"). Commits use the
 // separate /search/commits endpoint and must NOT get the qualifier.
@@ -52,4 +71,4 @@ function parseAllowlist(raw) {
     .map(e => e.toLowerCase().startsWith('org:') ? 'org:' + e.slice(4).trim() : (e.includes('/') ? 'repo:' + e : 'org:' + e))
     .filter(q => q !== 'org:' && q !== 'repo:');
 }
-module.exports = { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds, buildSearchQuery, buildIssuesQuery, parseAllowlist };
+module.exports = { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds, buildSearchQuery, buildIssuesQuery, parseAllowlist, parseDirectRef };
