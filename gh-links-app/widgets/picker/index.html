@@ -22,7 +22,7 @@ async function doSearch(){
   if (q.length < 2) { box.textContent = 'Type to search GitHub.'; items = []; return; }
   box.textContent = 'Searching…';
   try {
-    const data = await host.fetchApp('backend-global/search', {scope:true, query:{q, type, repo}});
+    const data = await host.fetchApp('backend-global/search', {query:{q, type, repo}});
     items = data.items || [];
   } catch (e) {
     box.textContent = 'Search failed: ' + errText(e); items = []; return;

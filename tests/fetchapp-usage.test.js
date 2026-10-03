@@ -53,3 +53,19 @@ test('manifest declares icon', () => {
   assert.equal(m.icon, 'icon.svg');
   assert.ok(fs.existsSync('gh-links-app/icon.svg'), 'icon.svg missing');
 });
+
+test('global endpoints are called WITHOUT scope:true (flag is only for entity-scope handlers)', () => {
+  for (const w of widgets) {
+    const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
+    assert.ok(!html.includes("backend-global/") || !/fetchApp\('backend-global\/[^']*',\s*\{[^}]*scope:\s*true/.test(html),
+      w + ' calls a global endpoint with scope:true — fetchApp then targets a scoped URL that 404s');
+  }
+});
+
+test('issue-scope backend/links keeps scope:true from issue widgets', () => {
+  for (const w of ['linked-panel', 'picker']) {
+    const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
+    assert.ok(html.includes("fetchApp('backend/links', {scope:true"),
+      w + ' must call issue-scope backend/links with scope:true');
+  }
+});

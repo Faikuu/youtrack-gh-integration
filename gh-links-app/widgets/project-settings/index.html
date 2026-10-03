@@ -8,10 +8,25 @@
 <script type="module">
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-document.getElementById('hook').textContent =
-  window.location.origin + '/api/extensionEndpoints/gh-links-app/backend-global/gh-webhook?token=…';
+function instanceOrigin() {
+  try {
+    const o = window.location.origin;
+    if (o && o !== 'null' && o.indexOf('http') === 0) return o;
+  } catch (e) {}
+  try {
+    const r = document.referrer;
+    if (r) {
+      const o = new URL(r).origin;
+      if (o && o.indexOf('http') === 0) return o;
+    }
+  } catch (e) {}
+  return '';
+}
+const base = instanceOrigin();
+const hookPath = '/api/extensionEndpoints/gh-links-app/backend-global/gh-webhook?token=…';
+document.getElementById('hook').textContent = base ? base + hookPath : hookPath + '  (prepend https://<your-youtrack> before ?token=…)';
 try {
-  const data = await host.fetchApp('backend-global/search', {scope:true, query:{q:'st'}});
+  const data = await host.fetchApp('backend-global/search', {query:{q:'st'}});
   const n = Array.isArray(data.items) ? data.items.length : 0;
   document.getElementById('status').innerHTML = 'Backend reachable (search probe returned <b>' + esc(String(n)) + '</b> items).';
 } catch (e) {

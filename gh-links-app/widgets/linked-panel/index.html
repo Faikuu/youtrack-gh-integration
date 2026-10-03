@@ -46,7 +46,7 @@ document.getElementById('q').addEventListener('input', e => {
     const sErr = document.getElementById('suggest-err');
     if (q.length < 2) { box.innerHTML = ''; sErr.textContent = ''; return; }
     try {
-      const data = await host.fetchApp('backend-global/search', {scope:true, query:{q}});
+      const data = await host.fetchApp('backend-global/search', {query:{q}});
       sErr.textContent = '';
       const items = (data.items || []).slice(0, 5);
       box.innerHTML = items.map((it, i)=>`<div><a href="#" data-i="${i}">${esc(it.title || it.url)}</a></div>`).join('');
