@@ -31,4 +31,15 @@ function buildSearchQuery(text, repo) {
   const q = String(text || '').trim();
   return repo ? `${q} repo:${repo}` : q;
 }
-module.exports = { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds, buildSearchQuery };
+// GitHub's /search/issues endpoint rejects queries without a type qualifier
+// (422 "Query must include 'is:issue' or 'is:pull-request'"). Commits use the
+// separate /search/commits endpoint and must NOT get the qualifier.
+function buildIssuesQuery(text, repo, kind) {
+  let q = String(text || '').trim();
+  if (!/\bis:(issue|pr|pull-request)\b/i.test(q)) {
+    q = (q ? q + ' ' : '') + (kind === 'pr' ? 'is:pr' : 'is:issue');
+  }
+  if (repo) q += ' repo:' + repo;
+  return q;
+}
+module.exports = { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds, buildSearchQuery, buildIssuesQuery };
