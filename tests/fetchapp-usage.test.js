@@ -62,6 +62,15 @@ test('global endpoints are called WITHOUT scope:true (flag is only for entity-sc
   }
 });
 
+test('panel offers per-type search tabs (issues, prs, commits) and sends the type', () => {
+  const html = fs.readFileSync('gh-links-app/widgets/linked-panel/index.html', 'utf8');
+  for (const t of ['data-t="issue"', 'data-t="pr"', 'data-t="commit"']) {
+    assert.ok(html.includes(t), 'panel missing tab ' + t);
+  }
+  assert.ok(/query:\{[^}]*type/.test(html), 'panel search must pass the selected type to the backend');
+  assert.ok(html.includes('sha'), 'panel must render commit rows (sha), not just issue numbers');
+});
+
 test('panel input needs no command prefix (gh/fix prefixes are stripped)', () => {
   const html = fs.readFileSync('gh-links-app/widgets/linked-panel/index.html', 'utf8');
   assert.ok(/gh\|fix/i.test(html) || /gh.*fix.*replace|replace.*gh/i.test(html),

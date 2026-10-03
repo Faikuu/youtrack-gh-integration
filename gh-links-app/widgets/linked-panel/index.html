@@ -1,31 +1,63 @@
-<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css"></head>
-<body style="padding:8px;font-family:system-ui">
-<div id="list">Loading…</div>
-<div id="err" style="color:red"></div>
-<div style="display:flex;gap:8px;margin-top:8px">
-<input id="q" placeholder="Search GitHub to link…" style="flex:1">
-<button id="link">Link GitHub…</button>
-</div><div id="suggest"></div>
-<div id="suggest-err" style="color:red"></div>
+<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css">
+<style>
+.gh{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;color:#1f2328}
+.gh h4{margin:2px 0 8px;font-size:12px;font-weight:600;color:#57606a;text-transform:uppercase;letter-spacing:.04em}
+.gh .tabs{display:flex;gap:4px;margin:10px 0 8px}
+.gh .tabs button{border:1px solid #d0d7de;background:#f6f8fa;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;color:#57606a}
+.gh .tabs button.on{background:#0969da;border-color:#0969da;color:#fff;font-weight:600}
+.gh input[type=text]{width:100%;box-sizing:border-box;border:1px solid #d0d7de;border-radius:6px;padding:6px 8px;font-size:13px}
+.gh input[type=text]:focus{outline:none;border-color:#0969da;box-shadow:0 0 0 3px rgba(9,105,218,.15)}
+.gh .row{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #eef1f4}
+.gh .row:last-child{border-bottom:none}
+.gh .badge{flex:none;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border-radius:10px;padding:2px 8px;color:#fff}
+.gh .badge.issue{background:#1a7f37}.gh .badge.pr{background:#8250df}.gh .badge.commit{background:#57606a}
+.gh .meta{min-width:0;flex:1}
+.gh .meta a{color:#0969da;text-decoration:none;font-weight:600}
+.gh .meta a:hover{text-decoration:underline}
+.gh .meta .title{display:block;color:#57606a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
+.gh .x{flex:none;border:none;background:none;color:#8c959f;font-size:14px;cursor:pointer;border-radius:4px;padding:0 4px}
+.gh .x:hover{color:#cf222e;background:#ffebe9}
+.gh .linkbtn{width:100%;margin-top:10px;border:1px solid #d0d7de;background:#f6f8fa;border-radius:6px;padding:6px;font-size:13px;cursor:pointer;color:#1f2328}
+.gh .linkbtn:hover{background:#eef1f4}
+.gh .muted{color:#8c959f;padding:6px 4px}
+.gh .err{color:#cf222e;padding:4px}
+.gh .res a{color:#1f2328;text-decoration:none;display:flex;gap:8px;align-items:baseline;padding:6px 4px;border-radius:6px}
+.gh .res a:hover{background:#f6f8fa}
+</style></head>
+<body><div class="gh">
+<div id="list"><div class="muted">Loading…</div></div>
+<div id="err" class="err"></div>
+<h4>Link new</h4>
+<div class="tabs" id="tabs">
+<button data-t="issue" class="on">Issues</button><button data-t="pr">Pull requests</button><button data-t="commit">Commits</button>
+</div>
+<input id="q" type="text" placeholder="Search GitHub to link…" autocomplete="off">
+<div id="suggest" class="res"></div>
+<div id="suggest-err" class="err"></div>
+<button id="link" class="linkbtn">Open full search…</button>
 <script type="module">
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function errText(e){ return e && e.message ? e.message : String(e); }
+let type = 'issue';
 async function load(){
   try {
     const data = await host.fetchApp('backend/links', {scope:true});
     document.getElementById('err').textContent = '';
     render(data.links || []);
   } catch (e) {
-    document.getElementById('list').textContent = 'Could not load links.';
+    document.getElementById('list').innerHTML = '<div class="muted">Could not load links.</div>';
     document.getElementById('err').textContent = 'Error: ' + errText(e);
   }
 }
-function label(l){ return esc(l.kind) + ' ' + esc(l.repo) + (l.number ? '#' + esc(String(l.number)) : l.sha ? '@' + esc(String(l.sha).slice(0,7)) : ''); }
+function label(l){
+  if (l.kind === 'commit' && l.sha) return esc(l.repo) + '@' + esc(String(l.sha).slice(0,7));
+  return esc(l.repo) + (l.number ? '#' + esc(String(l.number)) : '');
+}
 function render(links){
   const list = document.getElementById('list');
-  if (!links.length) { list.textContent = 'No GitHub links yet.'; return; }
-  list.innerHTML = links.map(l=>`<div><a href="${esc(l.url)}" target="_blank" rel="noopener">${label(l)}</a> ${esc(l.title||'')} <button data-url="${esc(l.url)}">x</button></div>`).join('');
+  if (!links.length) { list.innerHTML = '<div class="muted">No GitHub links yet.</div>'; return; }
+  list.innerHTML = links.map(l=>`<div class="row"><span class="badge ${esc(l.kind)}">${esc(l.kind)}</span><span class="meta"><a href="${esc(l.url)}" target="_blank" rel="noopener">${label(l)}</a><span class="title">${esc(l.title||'')}</span></span><button class="x" data-url="${esc(l.url)}" title="Unlink">×</button></div>`).join('');
   list.querySelectorAll('button[data-url]').forEach(b => { b.onclick = async () => {
     try {
       await host.fetchApp('backend/links', {scope:true, method:'DELETE', query:{url: b.dataset.url}});
@@ -37,35 +69,42 @@ function render(links){
   }; });
 }
 document.getElementById('link').onclick = () => host.enterModalMode();
+document.querySelectorAll('#tabs button').forEach(b => { b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); type = b.dataset.t; doSuggest();
+}; });
 let t = null;
-document.getElementById('q').addEventListener('input', e => {
-  clearTimeout(t);
-  t = setTimeout(async () => {
-    const raw = e.target.value.trim();
-    const q = raw.replace(/^(gh|fix)\s+/i, '');
-    const box = document.getElementById('suggest');
-    const sErr = document.getElementById('suggest-err');
-    if (q.length < 2) { box.innerHTML = ''; sErr.textContent = ''; return; }
-    try {
-      const data = await host.fetchApp('backend-global/search', {query:{q}});
-      sErr.textContent = '';
-      const items = (data.items || []).slice(0, 5);
-      box.innerHTML = items.map((it, i)=>`<div><a href="#" data-i="${i}">${esc(it.title || it.url)}</a></div>`).join('');
-      box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async ev => {
-        ev.preventDefault();
-        try {
-          const it = items[Number(a.dataset.i)];
-          const updated = await host.fetchApp('backend/links', {scope:true, method:'POST', body: it});
-          render(updated.links || []); box.innerHTML = ''; e.target.value = '';
-        } catch (err2) {
-          sErr.textContent = 'Error: ' + errText(err2);
-        }
-      }; });
-    } catch (e) {
-      box.innerHTML = '';
-      sErr.textContent = 'Error: ' + errText(e);
-    }
-  }, 300);
-});
+document.getElementById('q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(doSuggest, 300); });
+async function doSuggest(){
+  const raw = document.getElementById('q').value.trim();
+  const q = raw.replace(/^(gh|fix)\s+/i, '');
+  const box = document.getElementById('suggest');
+  const sErr = document.getElementById('suggest-err');
+  if (q.length < 2) { box.innerHTML = ''; sErr.textContent = ''; return; }
+  box.innerHTML = '<div class="muted">Searching…</div>';
+  try {
+    const data = await host.fetchApp('backend-global/search', {query:{q, type}});
+    sErr.textContent = '';
+    const items = (data.items || []).slice(0, 5);
+    if (!items.length) { box.innerHTML = '<div class="muted">No results.</div>'; return; }
+    box.innerHTML = items.map((it, i)=>{
+      const ref = it.kind === 'commit' && it.sha ? esc(it.repo) + '@' + esc(String(it.sha).slice(0,7)) : esc(it.repo) + (it.number ? '#' + esc(String(it.number)) : '');
+      return `<a href="#" data-i="${i}"><span class="badge ${esc(it.kind)}">${esc(it.kind)}</span><span class="meta"><b>${ref}</b><span class="title">${esc(it.title || it.url)}</span></span></a>`;
+    }).join('');
+    box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async ev => {
+      ev.preventDefault();
+      try {
+        const it = items[Number(a.dataset.i)];
+        const updated = await host.fetchApp('backend/links', {scope:true, method:'POST', body: it});
+        render(updated.links || []); box.innerHTML = ''; document.getElementById('q').value = '';
+      } catch (err2) {
+        sErr.textContent = 'Error: ' + errText(err2);
+      }
+    }; });
+  } catch (e) {
+    box.innerHTML = '';
+    sErr.textContent = 'Error: ' + errText(e);
+  }
+}
 await load();
-</script></body></html>
+</script></div></body></html>
