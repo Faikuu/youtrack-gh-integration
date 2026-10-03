@@ -62,6 +62,22 @@ test('global endpoints are called WITHOUT scope:true (flag is only for entity-sc
   }
 });
 
+test('widgets paint an explicit themed background (no transparent surfaces)', () => {
+  for (const w of widgets) {
+    const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
+    assert.ok(/background:\s*var\(--bg\)/.test(html), w + ' has no themed background');
+  }
+});
+
+test('search UI carries icons and friendly timeout errors', () => {
+  for (const w of ['linked-panel', 'picker']) {
+    const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');
+    assert.ok(html.includes('<svg'), w + ' has no icons');
+    assert.ok(/timed out/i.test(html), w + ' has no friendly timeout message');
+  }
+  const backend = fs.readFileSync('gh-links-app/backend-global.js', 'utf8');
+  assert.ok(backend.includes('per_page'), 'search should bound page size to reduce timeout risk');
+});
 test('widgets respect OS theme (no hardcoded light surfaces)', () => {
   for (const w of widgets) {
     const html = fs.readFileSync(`gh-links-app/widgets/${w}/index.html`, 'utf8');

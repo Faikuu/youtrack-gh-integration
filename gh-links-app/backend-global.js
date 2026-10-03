@@ -23,8 +23,8 @@ exports.httpHandler = {
       let query = type === 'commit' ? buildSearchQuery(q, '') : buildIssuesQuery(q, '', type);
       const scopeQuals = repo ? ['repo:' + repo] : parseAllowlist(ctx.settings.allowedRepos || '');
       if (scopeQuals.length) query += ' ' + scopeQuals.join(' ');
-      let path = '/search/issues?q=' + encodeURIComponent(query);
-      if (type === 'commit') path = '/search/commits?q=' + encodeURIComponent(query);
+      let path = '/search/issues?q=' + encodeURIComponent(query) + '&per_page=10';
+      if (type === 'commit') path = '/search/commits?q=' + encodeURIComponent(query) + '&per_page=10';
       const res = conn.getSync(path, {});
       if (!res || !res.isSuccess) { ctx.response.code = 502; ctx.response.json({ error: 'github search failed' }); return; }
       const body = res.json() || {};

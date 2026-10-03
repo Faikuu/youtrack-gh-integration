@@ -1,17 +1,21 @@
 <!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css">
 <style>
 :root{color-scheme:light dark}
-body{margin:0}
-.gh{--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--input:#ffffff;--hover:#f6f8fa;--accent:#0969da;--danger:#cf222e;
-font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;color:var(--fg);max-width:100%;overflow-x:hidden;padding:8px;box-sizing:border-box}
+body{margin:0;background:transparent}
+.gh{--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--input:#ffffff;--hover:#f6f8fa;--accent:#0969da;--danger:#cf222e;--bg:#ffffff;
+font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;color:var(--fg);max-width:100%;overflow-x:hidden;padding:10px;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px}
 @media (prefers-color-scheme:dark){
-.gh{--fg:#e6edf3;--muted:#8b949e;--border:#30363d;--input:#0d1117;--hover:#161b22;--accent:#4493f8;--danger:#f85149}
+.gh{--fg:#e6edf3;--muted:#8b949e;--border:#30363d;--input:#0d1117;--hover:#161b22;--accent:#4493f8;--danger:#f85149;--bg:#1e1f24}
 }
-.gh h4{margin:2px 0 8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.gh h4{margin:2px 0 8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px}
+.gh h4 svg{flex:none}
 .gh .tabs{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 8px}
-.gh .tabs button{border:1px solid var(--border);background:var(--hover);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;color:var(--muted);max-width:100%}
+.gh .tabs button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--hover);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;color:var(--muted);max-width:100%}
 .gh .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-.gh input[type=text]{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;background:var(--input);color:var(--fg)}
+.gh .tabs button svg{flex:none}
+.gh .search{position:relative}
+.gh .search svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.gh .search input[type=text]{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:6px 8px 6px 28px;font-size:13px;background:var(--input);color:var(--fg)}
 .gh input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.15)}
 .gh .row{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border);min-width:0}
 .gh .row:last-child{border-bottom:none}
@@ -23,7 +27,7 @@ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;
 .gh .meta .title{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
 .gh .x{flex:none;border:none;background:none;color:var(--muted);font-size:14px;cursor:pointer;border-radius:4px;padding:0 4px}
 .gh .x:hover{color:var(--danger);background:var(--hover)}
-.gh .linkbtn{width:100%;margin-top:10px;border:1px solid var(--border);background:var(--hover);border-radius:6px;padding:6px;font-size:13px;cursor:pointer;color:var(--fg)}
+.gh .linkbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;border:1px solid var(--border);background:var(--hover);border-radius:6px;padding:6px;font-size:13px;cursor:pointer;color:var(--fg)}
 .gh .muted{color:var(--muted);padding:6px 4px}
 .gh .err{color:var(--danger);padding:4px;word-break:break-word}
 .gh .res a{color:var(--fg);text-decoration:none;display:flex;gap:8px;align-items:baseline;padding:6px 4px;border-radius:6px;min-width:0}
@@ -32,18 +36,25 @@ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;
 <body><div class="gh">
 <div id="list"><div class="muted">Loading…</div></div>
 <div id="err" class="err"></div>
-<h4>Link new</h4>
+<h4><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 9.5l3-3M7.8 5.2l.7-.7a3 3 0 014.2 4.2l-.7.7M8.2 10.8l-.7.7a3 3 0 01-4.2-4.2l.7-.7"/></svg>Link new</h4>
 <div class="tabs" id="tabs">
-<button data-t="issue" class="on">Issues</button><button data-t="pr">Pull requests</button><button data-t="commit">Commits</button>
+<button data-t="issue" class="on"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none"/></svg>Issues</button><button data-t="pr"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="4.5" cy="4.5" r="2.2"/><circle cx="4.5" cy="11.5" r="2.2"/><circle cx="11.5" cy="7" r="2.2"/><path d="M4.5 6.7v2.6M11.5 7H7.4c-1.6 0-2.9-.9-2.9-2.3"/></svg>Pull requests</button><button data-t="commit"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="2.4"/><path d="M1.5 8h4.1M10.4 8h4.1"/></svg>Commits</button>
 </div>
-<input id="q" type="text" placeholder="Search GitHub to link…" autocomplete="off">
+<div class="search"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14.5 14.5"/></svg><input id="q" type="text" placeholder="Search GitHub to link…" autocomplete="off"></div>
 <div id="suggest" class="res"></div>
 <div id="suggest-err" class="err"></div>
-<button id="link" class="linkbtn">Open full search…</button>
+<button id="link" class="linkbtn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2.5"/><path d="M6 8.5v5M3.5 13.5h5M10 8L14.5 3.5M14.5 3.5H11M14.5 3.5V7"/></svg>Open full search…</button>
 <script type="module">
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function errText(e){ return e && e.message ? e.message : String(e); }
+function searchError(e){
+  const m = errText(e);
+  if (/\b504\b|timeout|timed out/i.test(m)) return 'GitHub search timed out. Try a longer, more specific query.';
+  if (/\b502\b/.test(m)) return 'GitHub rejected the search (rate limit or scope). Wait a moment and retry.';
+  if (/\b40[01]\b/.test(m)) return 'Search not allowed (token missing or no permission). Check the app settings.';
+  return m;
+}
 let type = 'issue';
 async function load(){
   try {
@@ -108,7 +119,7 @@ async function doSuggest(){
     }; });
   } catch (e) {
     box.innerHTML = '';
-    sErr.textContent = 'Error: ' + errText(e);
+    sErr.textContent = 'Error: ' + searchError(e);
   }
 }
 await load();
