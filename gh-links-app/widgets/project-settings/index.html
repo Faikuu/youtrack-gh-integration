@@ -9,12 +9,11 @@
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 document.getElementById('hook').textContent =
-  window.location.origin + '/api/extensionEndpoints/gh-links-app/backend/gh-webhook?token=…';
+  window.location.origin + '/api/extensionEndpoints/gh-links-app/backend-global/gh-webhook?token=…';
 try {
-  const r = await host.fetchApp('backend/links', {scope:true});
-  const j = await r.json();
-  const n = (j.links || []).length;
-  document.getElementById('status').innerHTML = 'Linked items in current issue scope: <b>' + esc(String(n)) + '</b>.';
+  const data = await host.fetchApp('backend-global/search', {scope:true, query:{q:'st'}});
+  const n = Array.isArray(data.items) ? data.items.length : 0;
+  document.getElementById('status').innerHTML = 'Backend reachable (search probe returned <b>' + esc(String(n)) + '</b> items).';
 } catch (e) {
   document.getElementById('status').textContent = 'Status unavailable: ' + (e && e.message ? e.message : e);
 }

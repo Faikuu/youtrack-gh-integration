@@ -1,22 +1,39 @@
 <!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css"></head>
 <body style="padding:8px;font-family:system-ui">
 <div id="list">Loading…</div>
+<div id="err" style="color:red"></div>
 <div style="display:flex;gap:8px;margin-top:8px">
 <input id="q" placeholder="gh <search> or fix <search>" style="flex:1">
 <button id="link">Link GitHub…</button>
 </div><div id="suggest"></div>
+<div id="suggest-err" style="color:red"></div>
 <script type="module">
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-async function load(){ const r = await host.fetchApp('backend/links', {scope:true}); const j = await r.json(); render(j.links||[]); }
+function errText(e){ return e && e.message ? e.message : String(e); }
+async function load(){
+  try {
+    const data = await host.fetchApp('backend/links', {scope:true});
+    document.getElementById('err').textContent = '';
+    render(data.links || []);
+  } catch (e) {
+    document.getElementById('list').textContent = 'Could not load links.';
+    document.getElementById('err').textContent = 'Error: ' + errText(e);
+  }
+}
 function label(l){ return esc(l.kind) + ' ' + esc(l.repo) + (l.number ? '#' + esc(String(l.number)) : l.sha ? '@' + esc(String(l.sha).slice(0,7)) : ''); }
 function render(links){
   const list = document.getElementById('list');
   if (!links.length) { list.textContent = 'No GitHub links yet.'; return; }
   list.innerHTML = links.map(l=>`<div><a href="${esc(l.url)}" target="_blank" rel="noopener">${label(l)}</a> ${esc(l.title||'')} <button data-url="${esc(l.url)}">x</button></div>`).join('');
   list.querySelectorAll('button[data-url]').forEach(b => { b.onclick = async () => {
-    const r = await host.fetchApp('backend/links?url=' + encodeURIComponent(b.dataset.url), {scope:true, method:'DELETE'});
-    render((await r.json()).links || []); await load();
+    try {
+      await host.fetchApp('backend/links', {scope:true, method:'DELETE', query:{url: b.dataset.url}});
+      document.getElementById('err').textContent = '';
+      await load();
+    } catch (e) {
+      document.getElementById('err').textContent = 'Error: ' + errText(e);
+    }
   }; });
 }
 document.getElementById('link').onclick = () => host.enterModalMode();
@@ -26,17 +43,27 @@ document.getElementById('q').addEventListener('input', e => {
   t = setTimeout(async () => {
     const q = e.target.value.trim();
     const box = document.getElementById('suggest');
-    if (q.length < 2) { box.innerHTML = ''; return; }
-    const r = await host.fetchApp('backend/search?q=' + encodeURIComponent(q), {scope:true});
-    const j = await r.json();
-    const items = (j.items || []).slice(0, 5);
-    box.innerHTML = items.map((it, i)=>`<div><a href="#" data-i="${i}">${esc(it.title || it.url)}</a></div>`).join('');
-    box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async ev => {
-      ev.preventDefault();
-      const it = items[Number(a.dataset.i)];
-      const r2 = await host.fetchApp('backend/links', {scope:true, method:'POST', body: it});
-      render((await r2.json()).links || []); box.innerHTML = ''; e.target.value = '';
-    }; });
+    const sErr = document.getElementById('suggest-err');
+    if (q.length < 2) { box.innerHTML = ''; sErr.textContent = ''; return; }
+    try {
+      const data = await host.fetchApp('backend-global/search', {scope:true, query:{q}});
+      sErr.textContent = '';
+      const items = (data.items || []).slice(0, 5);
+      box.innerHTML = items.map((it, i)=>`<div><a href="#" data-i="${i}">${esc(it.title || it.url)}</a></div>`).join('');
+      box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async ev => {
+        ev.preventDefault();
+        try {
+          const it = items[Number(a.dataset.i)];
+          const updated = await host.fetchApp('backend/links', {scope:true, method:'POST', body: it});
+          render(updated.links || []); box.innerHTML = ''; e.target.value = '';
+        } catch (err2) {
+          sErr.textContent = 'Error: ' + errText(err2);
+        }
+      }; });
+    } catch (e) {
+      box.innerHTML = '';
+      sErr.textContent = 'Error: ' + errText(e);
+    }
   }, 300);
 });
 await load();

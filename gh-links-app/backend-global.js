@@ -1,11 +1,11 @@
 const http = require('@jetbrains/youtrack-scripting-api/http');
-const { mapIssueItem, mapCommitItem } = require('../lib/gh-format.js');
-const { buildSearchQuery } = require('../lib/gh-links.js');
+const { mapIssueItem, mapCommitItem } = require('./lib/gh-format.js');
+const { buildSearchQuery } = require('./lib/gh-links.js');
 
 function repoFor(item, repoParam) {
   if (repoParam) return repoParam;
-  const parts = String(item.repository_url || '').split('/');
-  return parts.slice(-2).join('/');
+  const parts = String((item && item.repository_url) || '').split('/');
+  return parts.slice(-2).join('/') || (item && item.repository && item.repository.full_name) || '';
 }
 
 exports.httpHandler = {
@@ -32,43 +32,15 @@ exports.httpHandler = {
         : rawItems.map(it => mapIssueItem(it, repoFor(it, repo)));
       ctx.response.json({ items });
     } },
-    { scope: 'issue', method: 'GET', path: 'links', permissions: ['READ_ISSUE'], handle: function (ctx) {
-      const raw = ctx.issue.extensionProperties.ghLinks || '';
-      let links = [];
-      try { links = raw ? JSON.parse(raw) : []; if (!Array.isArray(links)) links = []; } catch (e) { links = []; }
-      ctx.response.json({ links: links });
-    } },
-    { scope: 'issue', method: 'POST', path: 'links', permissions: ['UPDATE_ISSUE'], handle: function (ctx) {
-      const entry = ctx.request.json();
-      if (!entry || !entry.url) { ctx.response.code = 400; ctx.response.json({ error: 'entry.url required' }); return; }
-      let links = [];
-      try { links = ctx.issue.extensionProperties.ghLinks ? JSON.parse(ctx.issue.extensionProperties.ghLinks) : []; } catch (e) { links = []; }
-      if (!links.some(function (x) { return x.url === entry.url; })) {
-        links.push(entry);
-        ctx.issue.extensionProperties.ghLinks = JSON.stringify(links);
-        ctx.issue.addComment('Linked GitHub ' + entry.kind + ' ' + entry.url + (entry.title ? ' — ' + entry.title : ''));
-      }
-      ctx.response.json({ links: links });
-    } },
-    { scope: 'issue', method: 'DELETE', path: 'links', permissions: ['UPDATE_ISSUE'], handle: function (ctx) {
-      const url = ctx.request.getParameter('url') || '';
-      let links = [];
-      try { links = ctx.issue.extensionProperties.ghLinks ? JSON.parse(ctx.issue.extensionProperties.ghLinks) : []; } catch (e) { links = []; }
-      links = links.filter(function (x) { return x.url !== url; });
-      ctx.issue.extensionProperties.ghLinks = JSON.stringify(links);
-      ctx.issue.addComment('Unlinked GitHub ' + url);
-      ctx.response.json({ links: links });
-    } },
     { scope: 'global', method: 'POST', path: 'gh-webhook', handle: function (ctx) {
       const token = ctx.request.getParameter('token') || '';
       if (!ctx.settings.webhookToken || token !== ctx.settings.webhookToken) { ctx.response.code = 401; ctx.response.json({ error: 'bad token' }); return; }
       const entities = require('@jetbrains/youtrack-scripting-api/entities');
       const payload = ctx.request.json();
-      const event = null; // event name arrives via X-GitHub-Event header; handlers read headers via ctx.request.headers
       let text = '';
       if (payload && payload.pull_request) text = (payload.pull_request.title || '') + '\n' + (payload.pull_request.body || '');
       else if (payload && payload.issue) text = (payload.issue.title || '') + '\n' + (payload.issue.body || '');
-      else if (payload && payload.commits) text = payload.commits.map(function (c) { return c.message; }).join('\n');
+      else if (payload && Array.isArray(payload.commits)) text = payload.commits.map(function (c) { return String((c && c.message) || ''); }).join('\n');
       const ids = {};
       const re = /\b([A-Z][A-Z0-9]+-\d+)\b/gi;
       let m;

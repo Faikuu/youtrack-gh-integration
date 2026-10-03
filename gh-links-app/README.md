@@ -49,7 +49,7 @@ Leave blank to allow all repositories.
 ## 5. GitHub webhook setup
 
 1. Copy the webhook URL printed in the **GitHub Settings** project widget:
-   `https://<youtrack>/api/extensionEndpoints/gh-links-app/backend/gh-webhook?token=<webhookToken>`
+   `https://<youtrack>/api/extensionEndpoints/gh-links-app/backend-global/gh-webhook?token=<webhookToken>`
 2. On GitHub: repo **Settings → Webhooks → Add webhook**:
    - **Payload URL**: the URL above (keep the `?token=` query).
    - **Content type**: `application/json`.

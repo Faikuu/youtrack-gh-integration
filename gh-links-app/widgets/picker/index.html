@@ -9,6 +9,7 @@
 <script type="module">
 const host = await YTApp.register();
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function errText(e){ return e && e.message ? e.message : String(e); }
 let type = 'issue', timer = null, items = [];
 document.querySelectorAll('#tabs button').forEach(b => { b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('on'));
@@ -20,18 +21,23 @@ async function doSearch(){
   const box = document.getElementById('res');
   if (q.length < 2) { box.textContent = 'Type to search GitHub.'; items = []; return; }
   box.textContent = 'Searching…';
-  const url = 'backend/search?q=' + encodeURIComponent(q) + '&type=' + encodeURIComponent(type) + (repo ? '&repo=' + encodeURIComponent(repo) : '');
-  const r = await host.fetchApp(url, {scope:true});
-  const j = await r.json();
-  items = j.items || [];
+  try {
+    const data = await host.fetchApp('backend-global/search', {scope:true, query:{q, type, repo}});
+    items = data.items || [];
+  } catch (e) {
+    box.textContent = 'Search failed: ' + errText(e); items = []; return;
+  }
   if (!items.length) { box.textContent = 'No results.'; return; }
   box.innerHTML = items.map((it, i)=>`<div style="padding:4px 0"><a href="#" data-i="${i}">${esc(it.kind)} ${esc(it.repo)}${it.number?'#'+esc(String(it.number)):''} — ${esc(it.title||it.url)}</a></div>`).join('');
   box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async e => {
     e.preventDefault();
-    const r2 = await host.fetchApp('backend/links', {scope:true, method:'POST', body: items[Number(a.dataset.i)]});
-    await r2.json();
-    await host.alert('Linked');
-    if (host.exitModalMode) host.exitModalMode();
+    try {
+      await host.fetchApp('backend/links', {scope:true, method:'POST', body: items[Number(a.dataset.i)]});
+      await host.alert('Linked');
+      if (host.exitModalMode) host.exitModalMode();
+    } catch (err) {
+      box.textContent = 'Link failed: ' + errText(err);
+    }
   }; });
 }
 document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });

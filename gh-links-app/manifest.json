@@ -6,6 +6,7 @@
   "version": "0.1.0",
   "minYouTrackVersion": "2024.1.0",
   "vendor": { "name": "homebrew" },
+  "icon": "icon.svg",
   "widgets": [
     { "key": "linked-panel", "name": "Linked GitHub", "extensionPoint": "ISSUE_FIELD_PANEL_LAST", "indexPath": "linked-panel/index.html", "permissions": ["READ_ISSUE"] },
     { "key": "link-picker", "name": "Link GitHub...", "extensionPoint": "ISSUE_OPTIONS_MENU_ITEM", "indexPath": "picker/index.html", "permissions": ["READ_ISSUE"] },
