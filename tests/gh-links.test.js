@@ -1,7 +1,7 @@
 // tests/gh-links.test.js
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds } = require('../gh-links-app/lib/gh-links.js');
+const { parseLinks, serializeLinks, addLink, removeLink, extractIssueIds } = require('../gh-links-app/gh-links.js');
 
 test('parseLinks returns [] on empty or corrupt input', () => {
   assert.deepEqual(parseLinks(''), []);

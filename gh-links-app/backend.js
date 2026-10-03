@@ -1,4 +1,4 @@
-const { validateEntry } = require('./lib/gh-format.js');
+const { validateEntry } = require('./gh-format.js');
 
 function readLinks(issue) {
   const raw = (issue && issue.extensionProperties && issue.extensionProperties.ghLinks) || '';

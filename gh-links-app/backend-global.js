@@ -1,6 +1,6 @@
 const http = require('@jetbrains/youtrack-scripting-api/http');
-const { mapIssueItem, mapCommitItem } = require('./lib/gh-format.js');
-const { buildSearchQuery } = require('./lib/gh-links.js');
+const { mapIssueItem, mapCommitItem } = require('./gh-format.js');
+const { buildSearchQuery } = require('./gh-links.js');
 
 function repoFor(item, repoParam) {
   if (repoParam) return repoParam;
