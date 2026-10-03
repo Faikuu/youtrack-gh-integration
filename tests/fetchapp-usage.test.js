@@ -66,6 +66,7 @@ test('panel is modal-aware (hides open button, offers close in modal)', () => {
   const html = fs.readFileSync('gh-links-app/widgets/linked-panel/index.html', 'utf8');
   assert.ok(html.includes('exitModalMode'), 'panel cannot close the modal');
   assert.ok(html.includes('id="close"'), 'panel has no close button');
+  assert.ok(html.includes('innerWidth') || html.includes('matchMedia'), 'panel does not detect modal by width (JS flags reset on modal reload)');
 });
 test('widgets paint an explicit themed background (no transparent surfaces)', () => {
   for (const w of widgets) {

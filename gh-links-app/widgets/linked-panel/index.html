@@ -39,6 +39,7 @@ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;
 .gh .err{color:var(--danger);padding:4px;word-break:break-word}
 .gh .res a{color:var(--fg);text-decoration:none;display:flex;gap:8px;align-items:baseline;padding:6px 4px;border-radius:6px;min-width:0}
 .gh .res a:hover{background:var(--hover)}
+.gh [hidden]{display:none !important}
 </style></head>
 <body><div class="gh">
 <div class="topbar"><h4>GitHub links</h4><button id="close" class="x" title="Close" hidden>×</button></div>
@@ -92,13 +93,17 @@ function render(links){
     }
   }; });
 }
-document.getElementById('link').onclick = () => { host.enterModalMode(); inModal = true; syncMode(); };
-document.getElementById('close').onclick = () => { try { if (host.exitModalMode) host.exitModalMode(); } finally { inModal = false; syncMode(); } };
-let inModal = false;
+document.getElementById('link').onclick = () => host.enterModalMode();
+document.getElementById('close').onclick = () => { try { if (host.exitModalMode) host.exitModalMode(); } catch (e) {} };
+// The modal reloads this iframe, so no JS flag survives: detect the modal by
+// width instead (sidebar ≈300px, modal is far wider). Self-heals on resize
+// and on native modal close.
 function syncMode(){
-  document.getElementById('link').hidden = inModal;
-  document.getElementById('close').hidden = !inModal;
+  const wide = window.innerWidth > 550;
+  document.getElementById('link').hidden = wide;
+  document.getElementById('close').hidden = !wide;
 }
+window.addEventListener('resize', syncMode);
 syncMode();
 function skeleton(n, kind){
   let rows = '';
