@@ -1,0 +1,39 @@
+<!doctype html><html><head><link rel="stylesheet" href="https://unpkg.com/@jetbrains/ring-ui-built@6/components/style.css"></head>
+<body style="padding:12px;font-family:system-ui">
+<div id="tabs" style="display:flex;gap:4px;margin-bottom:8px">
+<button data-t="issue" class="on">Issues</button><button data-t="pr">PRs</button><button data-t="commit">Commits</button>
+</div>
+<input id="q" placeholder="Type at least 2 characters…" style="width:100%">
+<div id="repo"><input id="r" placeholder="owner/repo (optional)" style="width:100%;margin-top:8px"></div>
+<div id="res" style="margin-top:8px">Type to search GitHub.</div>
+<script type="module">
+const host = await YTApp.register();
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let type = 'issue', timer = null, items = [];
+document.querySelectorAll('#tabs button').forEach(b => { b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); type = b.dataset.t; doSearch();
+}; });
+async function doSearch(){
+  const q = document.getElementById('q').value.trim();
+  const repo = document.getElementById('r').value.trim();
+  const box = document.getElementById('res');
+  if (q.length < 2) { box.textContent = 'Type to search GitHub.'; items = []; return; }
+  box.textContent = 'Searching…';
+  const url = 'backend/search?q=' + encodeURIComponent(q) + '&type=' + encodeURIComponent(type) + (repo ? '&repo=' + encodeURIComponent(repo) : '');
+  const r = await host.fetchApp(url, {scope:true});
+  const j = await r.json();
+  items = j.items || [];
+  if (!items.length) { box.textContent = 'No results.'; return; }
+  box.innerHTML = items.map((it, i)=>`<div style="padding:4px 0"><a href="#" data-i="${i}">${esc(it.kind)} ${esc(it.repo)}${it.number?'#'+esc(String(it.number)):''} — ${esc(it.title||it.url)}</a></div>`).join('');
+  box.querySelectorAll('a[data-i]').forEach(a => { a.onclick = async e => {
+    e.preventDefault();
+    const r2 = await host.fetchApp('backend/links', {scope:true, method:'POST', body: items[Number(a.dataset.i)]});
+    await r2.json();
+    await host.alert('Linked');
+    if (host.exitModalMode) host.exitModalMode();
+  }; });
+}
+document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
+document.getElementById('r').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
+</script></body></html>
