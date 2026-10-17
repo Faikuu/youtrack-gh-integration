@@ -66,3 +66,7 @@ The app is unit-tested but has not yet been run end-to-end against a live
 YouTrack instance. The manual checklist in section 8 of
 [gh-links-app/README.md](gh-links-app/README.md) is still unchecked. Known v1
 limitations are listed at the end of that file.
+
+## License
+
+Released under the [MIT License](LICENSE).
